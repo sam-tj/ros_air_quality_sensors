@@ -102,7 +102,8 @@ Now there should be an ip address of local network. Should be in series of 192.1
 4. Once the flashing is successful, run
    - ros2 run micro_ros_agent micro_ros_agent udp4 --port 8888
 5. Open new terminal window, and check ros topic
-   - ros2 topic echo /time_publisher
+   - ros2 topic echo /sensors  
+   - It can be the echo does not work for custom message. This will be updated in future fixes.
 
 ------------
 

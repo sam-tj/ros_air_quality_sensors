@@ -69,6 +69,7 @@ bool autocal;
 
 int16_t counter = 0;
 
+static void message_init(void);
 static void initialize_mhz19b(void);
 static void mhz19b_warmup(void);
 static void mhz19b_reading(void);
@@ -84,12 +85,12 @@ void timer_callback(rcl_timer_t *timer, int64_t last_call_time)
 	if (timer != NULL)
 	{
 		const unsigned int PUB_MSG_CAPACITY = 30;
-		msg.counter = counter++;		
+		msg.counter = counter++;
 
 		msg.time.data = malloc(PUB_MSG_CAPACITY);
 		snprintf(msg.time.data, PUB_MSG_CAPACITY, "Time now  hh: %d mm: %d ss: %d", timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
 		msg.time.capacity = PUB_MSG_CAPACITY;
-		
+
 		msg.co2 = co2;
 		msg.temperature = temp;
 		msg.r0value = R0val;
@@ -130,7 +131,7 @@ void appMain(void *arg)
 	RCCHECK(rclc_publisher_init_default(
 		&publisher,
 		&node,
-		ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float32MultiArray),
+		ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Sensdata),
 		"sensors"));
 
 	// create timer,
@@ -147,6 +148,8 @@ void appMain(void *arg)
 	RCCHECK(rclc_executor_init(&executor, &support.context, 1, &allocator));
 	RCCHECK(rclc_executor_add_timer(&executor, &timer));
 
+	message_init();
+
 	while (1)
 	{
 		rclc_executor_spin_some(&executor, RCL_MS_TO_NS(100));
@@ -158,6 +161,18 @@ void appMain(void *arg)
 	RCCHECK(rcl_node_fini(&node))
 
 	vTaskDelete(NULL);
+}
+
+static void message_init(void)
+{
+	msg.time.data = "";
+	msg.counter = 0;
+	msg.co2 = 0;
+	msg.temperature = 0;
+	msg.r0value = 0;
+	msg.lpg = 0;
+	msg.co = 0;
+	msg.smoke = 0;
 }
 
 static void initialize_mhz19b(void)
