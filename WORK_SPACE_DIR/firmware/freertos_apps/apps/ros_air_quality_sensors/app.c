@@ -83,11 +83,13 @@ void timer_callback(rcl_timer_t *timer, int64_t last_call_time)
 	RCLC_UNUSED(last_call_time);
 	if (timer != NULL)
 	{
-
 		const unsigned int PUB_MSG_CAPACITY = 30;
 		msg.counter = counter++;		
-		//msg.time = malloc(PUB_MSG_CAPACITY);
-		//snprintf(msg.time, PUB_MSG_CAPACITY, "Time now  hh:" );
+
+		msg.time.data = malloc(PUB_MSG_CAPACITY);
+		snprintf(msg.time.data, PUB_MSG_CAPACITY, "Time now  hh: %d mm: %d ss: %d", timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
+		msg.time.capacity = PUB_MSG_CAPACITY;
+		
 		msg.co2 = co2;
 		msg.temperature = temp;
 		msg.r0value = R0val;
@@ -99,6 +101,7 @@ void timer_callback(rcl_timer_t *timer, int64_t last_call_time)
 		printf("\nanalog read = %d", adc1_get_raw(ADC1_CHANNEL_4));
 
 		RCSOFTCHECK(rcl_publish(&publisher, &msg, NULL));
+		free(msg.time.data);
 	}
 }
 
