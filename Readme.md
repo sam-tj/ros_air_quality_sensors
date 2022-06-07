@@ -123,4 +123,5 @@ Available time attributes in time struct.
 
 ### References
 - http://sandboxelectronics.com/?p=165
-- 
+- https://vitux.com/how-to-install-ntp-server-and-client-on-ubuntu/
+- https://www.theconstructsim.com/ros2-tutorials-7-how-to-create-a-ros2-custom-message-new/
