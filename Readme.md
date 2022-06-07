@@ -1,11 +1,11 @@
-#ROS Air quality sensor
+# ROS Air quality sensor
 
 This is an example project which allows to send custom message from an various sensors mentioned below to ros2
 The code can be modified according to application.
 
 ------------
 
-Sample video pending [..](.. "..").
+[![Sample topic echo](https://raw.githubusercontent.com/sam-tj/ros_air_quality_sensors/master/sample_topic_echo.jpg)](#)
 
 ------------
 
