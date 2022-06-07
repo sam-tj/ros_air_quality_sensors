@@ -94,16 +94,19 @@ Now there should be an ip address of local network. Should be in series of 192.1
 
 ### Tutorial
 1. Follow the  [tutorial here](https://link.medium.com/pdmyDUIh9nb "tutorial here") to setup the micro-ros environment.
-2. Clone this repository and copy the folder 'firmware' inside your workspace such that folder structure is as  [YOUR WORKSPACE]/firmware/freertos_apps/apps/ros_air_quality_sensors and [YOUR WORKSPACE]/firmware/mcu_ws/custom_message
-3. Open terminal can follow these commands:
+2. Clone this repository and copy the folder 'firmware' inside your Micro-Ros workspace such that folder structure is as  [YOUR Micro-Ros WORKSPACE]/firmware/freertos_apps/apps/ros_air_quality_sensors and [YOUR Micro-Ros WORKSPACE]/firmware/mcu_ws/custom_message
+3. Open terminal and enter following commands inside your [Micro-Ros workspace]:
    - ros2 run micro_ros_setup configure_firmware.sh ros_air_quality_sensors -t udp -i [LOCAL MACHINE IP ADDRESS] -p 8888
    - ros2 run micro_ros_setup build_firmware.sh
    - ros2 run micro_ros_setup flash_firmware.sh
 4. Once the flashing is successful, run
    - ros2 run micro_ros_agent micro_ros_agent udp4 --port 8888
-5. Open new terminal window, and check ros topic
-   - ros2 topic echo /sensors  
-   - It can be the echo does not work for custom message. This will be updated in future fixes.
+5. Copy src from ROS2_WORKSPACE_DIR folder and paste it inside your ROS2 Workspace such that folder structure is as [YOUR ROS2 WORKSPACE]/src/custom_message
+6. Open new terminal window, and reach [YOUR ROS2 WORKSPACE] 
+7. Enter following commands inside your ROS2 workspace:
+   - colcon build
+   - source install/setup.bash
+   - ros2 topic echo /sensors
 
 ------------
 
@@ -117,3 +120,7 @@ Available time attributes in time struct.
 - int tm_wday       ->      Day of week.	[0-6]
 - int tm_yday       ->      Days in year.[0-365]
 - int tm_isdst      ->      DST.		[-1/0/1]
+
+### References
+- http://sandboxelectronics.com/?p=165
+- 

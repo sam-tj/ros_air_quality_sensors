@@ -84,11 +84,11 @@ void timer_callback(rcl_timer_t *timer, int64_t last_call_time)
 	RCLC_UNUSED(last_call_time);
 	if (timer != NULL)
 	{
-		const unsigned int PUB_MSG_CAPACITY = 30;
+		const unsigned int PUB_MSG_CAPACITY = 31;
 		msg.counter = counter++;
 
 		msg.time.data = malloc(PUB_MSG_CAPACITY);
-		snprintf(msg.time.data, PUB_MSG_CAPACITY, "Time now  hh: %d mm: %d ss: %d", timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
+		snprintf(msg.time.data, PUB_MSG_CAPACITY, "Time now hh: %d mm: %d ss: %d", timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
 		msg.time.capacity = PUB_MSG_CAPACITY;
 
 		msg.co2 = co2;
@@ -110,7 +110,7 @@ void appMain(void *arg)
 {
 	if (timeinfo.tm_year < (2016 - 1900))
 	{
-		printf("Time is not set yet. Connecting to WiFi and getting time over NTP.");
+		printf("Time is not set yet. Connecting to WiFi and getting time over NTP.\n");
 		initialize_sntp();
 	}
 	initialize_adc();
@@ -180,35 +180,44 @@ static void initialize_mhz19b(void)
 	// sesnsor init
 	RCCHECK(mhz19b_init(&dev, UART_NUM_1, 12, 13));
 
-	while (!mhz19b_detect(&dev))
+	int retry = 0;
+	const int retry_count = 5;
+
+	while (!mhz19b_detect(&dev) && ++retry < retry_count)
 	{
-		printf("MHZ-19B not detected, waiting...\n");
+		printf("MHZ-19B not detected, waiting...(%d/%d)\n", retry, retry_count);
 		vTaskDelay(1000 / portTICK_PERIOD_MS);
 	}
 
-	mhz19b_get_version(&dev, version);
-	printf("MHZ-19B firmware version: %s", version);
+	if (mhz19b_is_ready(&dev))
+	{
+		mhz19b_get_version(&dev, version);
+		printf("MHZ-19B firmware version: %s", version);
 
-	printf("MHZ-19B set range and autocal");
+		printf("MHZ-19B set range and autocal");
 
-	mhz19b_set_range(&dev, MHZ19B_RANGE_5000);
-	mhz19b_set_auto_calibration(&dev, false);
+		mhz19b_set_range(&dev, MHZ19B_RANGE_5000);
+		mhz19b_set_auto_calibration(&dev, false);
 
-	mhz19b_get_range(&dev, &range);
-	printf("range: %d", range);
+		mhz19b_get_range(&dev, &range);
+		printf("range: %d", range);
 
-	mhz19b_get_auto_calibration(&dev, &autocal);
-	printf("autocal: %s", autocal ? "ON" : "OFF");
+		mhz19b_get_auto_calibration(&dev, &autocal);
+		printf("autocal: %s", autocal ? "ON" : "OFF");
+	}
 }
 
 static void mhz19b_warmup(void)
 {
-	//memcpy(msg.data.data, array_init, sizeof(array_init_size));
-
-	while (mhz19b_is_warming_up(&dev, true)) // use smart warming up detection
+	if (mhz19b_is_ready(&dev))
 	{
-		printf("MHZ-19B is warming up\n");
-		vTaskDelay(1000 / portTICK_PERIOD_MS);
+		//memcpy(msg.data.data, array_init, sizeof(array_init_size));
+
+		while (mhz19b_is_warming_up(&dev, true)) // use smart warming up detection
+		{
+			printf("MHZ-19B is warming up\n");
+			vTaskDelay(1000 / portTICK_PERIOD_MS);
+		}
 	}
 }
 
@@ -239,10 +248,10 @@ static void initialize_sntp(void)
 	sntp_setservername(0, "192.168.0.11"); // update ip with respect to the ntp server
 	sntp_init();
 	int retry = 0;
-	const int retry_count = 15;
+	const int retry_count = 5;
 	while (sntp_get_sync_status() == SNTP_SYNC_STATUS_RESET && ++retry < retry_count)
 	{
-		printf("Waiting for system time to be set... (%d/%d)", retry, retry_count);
+		printf("Waiting for system time to be set... (%d/%d)\n", retry, retry_count);
 		vTaskDelay(2000 / portTICK_PERIOD_MS);
 	}
 	time(&now);
