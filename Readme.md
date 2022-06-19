@@ -22,11 +22,11 @@ pending
 ------------
 
 ### Connections
-|  ESP32  |  mhz_19b Sensor  |  MQ2 Sensor  |
+|  ESP32  |  mhz_19b Sensor  |  MQ135 Sensor  |
 |  ------------ |  ------------ |  ------------ |
 |  G12  |  RX  |  -  |
 |  G13  |  TX  |  -  |
-|  G13  |  -  |  G32  |
+|  G32  |  -  |  A0  |
 |  5V  |  VCC  |  VCC  |
 |  GND  |  GND  |  GND  |
 
