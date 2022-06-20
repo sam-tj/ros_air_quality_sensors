@@ -24,7 +24,7 @@
 #endif
 
 #include "components/mhz19b/mhz19b.c" //wrong impementation
-#include "components/MQ-2-sensor-library/MQ2.c"
+#include "components/MQ-135-library/MQ135.c"
 
 #define ADC1_CHANNEL_4 ADC1_CHANNEL_4 //ADC1 channel 4 is GPIO32 (ESP32)
 
@@ -94,9 +94,12 @@ void timer_callback(rcl_timer_t *timer, int64_t last_call_time)
 		msg.co2 = co2;
 		msg.temperature = temp;
 		msg.r0value = R0val;
-		msg.lpg = readLPG();
+		msg.co2_mq135 = readCO2();
 		msg.co = readCO();
-		msg.smoke = readSmoke();
+		msg.alcohol = readALCOHOL();
+		msg.ammonium = readAMMONIUM();
+		msg.toulene = readTOULENE();
+		msg.acetone = readACETONE();		
 
 		//print values in serial monitor
 		printf("\nanalog read = %d", adc1_get_raw(ADC1_CHANNEL_4));
@@ -170,9 +173,12 @@ static void message_init(void)
 	msg.co2 = 0;
 	msg.temperature = 0;
 	msg.r0value = 0;
-	msg.lpg = 0;
+	msg.co2_mq135 = 0;
 	msg.co = 0;
-	msg.smoke = 0;
+	msg.alcohol = 0;
+	msg.ammonium = 0;
+	msg.toulene = 0;
+	msg.acetone = 0;
 }
 
 static void initialize_mhz19b(void)
@@ -238,7 +244,7 @@ void initialize_adc(void)
 	printf("ADC1 init...\n");
 	adc1_config_channel_atten(ADC1_CHANNEL_4, ADC_ATTEN_11db);
 	adc1_config_width(width);
-	MQ2pin(ADC1_CHANNEL_4);
+	MQ135pin(ADC1_CHANNEL_4);
 	R0val = begin();
 }
 
