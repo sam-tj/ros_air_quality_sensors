@@ -2,7 +2,7 @@ string time
 int16 counter
 int16 co2
 int16 temperature
-float32 r0value
+int16 r0value
 float32 co2_mq135
 float32 co
 float32 alcohol
