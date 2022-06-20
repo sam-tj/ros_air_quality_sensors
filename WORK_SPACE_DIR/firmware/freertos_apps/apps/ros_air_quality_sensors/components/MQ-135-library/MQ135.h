@@ -9,7 +9,7 @@ int _pin;
 int _RL_VALUE = 10; //define the load resistance on the board, in kilo ohms
 int RO_CLEAN_AIR_FACTOR = 3.6;
 int CALIBARAION_SAMPLE_TIMES = 5;
-int CALIBRATION_SAMPLE_INTERVAL = 50;
+int CALIBRATION_SAMPLE_INTERVAL = 500;
 int READ_SAMPLE_INTERVAL = 50;
 int READ_SAMPLE_TIMES = 5;
 
@@ -20,6 +20,7 @@ float AMMONIUMCurve[2] = {-2.469, 2.005};
 float TOLUENECurve[2] = {-3.479, 1.658};
 float ACETONECurve[2] = {-3.452, 1.542};
 float Ro = 10;
+int Ro_inf = 9999;
 
 int GAS_CARBON_DIOXIDE = 0;
 int GAS_CARBON_MONOXIDE = 1;

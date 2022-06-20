@@ -94,12 +94,15 @@ void timer_callback(rcl_timer_t *timer, int64_t last_call_time)
 		msg.co2 = co2;
 		msg.temperature = temp;
 		msg.r0value = R0val;
-		msg.co2_mq135 = readCO2();
-		msg.co = readCO();
-		msg.alcohol = readALCOHOL();
-		msg.ammonium = readAMMONIUM();
-		msg.toulene = readTOULENE();
-		msg.acetone = readACETONE();
+		if (R0val < Ro_inf)
+		{
+			msg.co2_mq135 = readCO2();
+			msg.co = readCO();
+			msg.alcohol = readALCOHOL();
+			msg.ammonium = readAMMONIUM();
+			msg.toulene = readTOULENE();
+			msg.acetone = readACETONE();
+		}
 
 		//print values in serial monitor
 		printf("\nanalog read = %d", adc1_get_raw(ADC1_CHANNEL_4));

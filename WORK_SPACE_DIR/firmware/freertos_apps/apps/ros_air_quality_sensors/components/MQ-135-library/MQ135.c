@@ -10,6 +10,10 @@ void MQ135init(int pin, float RL_VALUE)
 float begin()
 {
   Ro = MQCalibration();
+  if (Ro < 0)
+  {
+    Ro = Ro_inf;
+  }
   return Ro;
 }
 
@@ -118,12 +122,11 @@ float MQCalibration()
 
 float MQRead()
 {
-  float rs = 0;
-  int val = adc1_get_raw(_pin);
+  float rs = 0;  
 
   for (int i = 0; i < READ_SAMPLE_TIMES; i++)
   {
-    rs += MQResistanceCalculation(val);
+    rs += MQResistanceCalculation(adc1_get_raw(_pin));
     vTaskDelay(READ_SAMPLE_INTERVAL / portTICK_RATE_MS);
   }
 
