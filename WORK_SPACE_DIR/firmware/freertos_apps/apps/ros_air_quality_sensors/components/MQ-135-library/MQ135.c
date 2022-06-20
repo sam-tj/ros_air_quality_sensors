@@ -94,7 +94,6 @@ float readACETONE()
   }
 }
 
-
 float MQResistanceCalculation(int raw_adc)
 {
   return (((float)RL_VALUE * (1023 - raw_adc) / raw_adc));
@@ -153,7 +152,7 @@ float MQGetGasPercentage(float rs_ro_ratio, int gas_id)
   {
     return MQGetPercentage(rs_ro_ratio, TOLUENECurve);
   }
-   else if (gas_id == GAS_ACETONE)
+  else if (gas_id == GAS_ACETONE)
   {
     return MQGetPercentage(rs_ro_ratio, ACETONECurve);
   }
@@ -162,5 +161,5 @@ float MQGetGasPercentage(float rs_ro_ratio, int gas_id)
 
 float MQGetPercentage(float rs_ro_ratio, float *pcurve)
 {
-  return (pow(10,((pcurve[0]*(log10(rs_ro_ratio))) + pcurve[1])));  
+  return (pow(10, ((pcurve[0] * (log10(rs_ro_ratio))) + pcurve[1])));
 }

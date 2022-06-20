@@ -99,7 +99,7 @@ void timer_callback(rcl_timer_t *timer, int64_t last_call_time)
 		msg.alcohol = readALCOHOL();
 		msg.ammonium = readAMMONIUM();
 		msg.toulene = readTOULENE();
-		msg.acetone = readACETONE();		
+		msg.acetone = readACETONE();
 
 		//print values in serial monitor
 		printf("\nanalog read = %d", adc1_get_raw(ADC1_CHANNEL_4));
