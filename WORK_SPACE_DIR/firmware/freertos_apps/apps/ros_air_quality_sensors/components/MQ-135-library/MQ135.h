@@ -3,10 +3,10 @@
 
 #endif
 
-void MQ135pin(int pin);
+void MQ135init(int pin, float RL_VALUE);
 
 int _pin;
-int RL_VALUE = 22.5; //define the load resistance on the board, in kilo ohms
+int _RL_VALUE = 10; //define the load resistance on the board, in kilo ohms
 int RO_CLEAN_AIR_FACTOR = 3.6;
 int CALIBARAION_SAMPLE_TIMES = 5;
 int CALIBRATION_SAMPLE_INTERVAL = 50;

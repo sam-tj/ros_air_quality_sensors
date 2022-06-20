@@ -2,9 +2,10 @@
 #include <math.h>
 #include "freertos/task.h"
 
-void MQ135pin(int pin)
+void MQ135init(int pin, float RL_VALUE)
 {
   _pin = pin;
+  _RL_VALUE = RL_VALUE;
 }
 float begin()
 {
@@ -96,7 +97,7 @@ float readACETONE()
 
 float MQResistanceCalculation(int raw_adc)
 {
-  return (((float)RL_VALUE * (1023 - raw_adc) / raw_adc));
+  return (((float)_RL_VALUE * (1023 - raw_adc) / raw_adc));
 }
 
 float MQCalibration()

@@ -244,7 +244,7 @@ void initialize_adc(void)
 	printf("ADC1 init...\n");
 	adc1_config_channel_atten(ADC1_CHANNEL_4, ADC_ATTEN_11db);
 	adc1_config_width(width);
-	MQ135pin(ADC1_CHANNEL_4);
+	MQ135init(ADC1_CHANNEL_4, 22.2);
 	R0val = begin();
 }
 
