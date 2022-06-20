@@ -28,7 +28,7 @@ int GAS_AMMONIUM = 3;
 int GAS_TOLUENE = 4;
 int GAS_ACETONE = 5;
 
-float co2 = 0;
+float co2_mq135 = 0;
 float co = 0;
 float alcohol = 0;
 float ammonium = 0;

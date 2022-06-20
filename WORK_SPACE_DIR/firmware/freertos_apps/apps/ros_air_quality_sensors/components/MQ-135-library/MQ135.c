@@ -15,7 +15,7 @@ float begin()
 float *readMQ135()
 {
 
-  co2 = MQGetGasPercentage(MQRead() / Ro, GAS_CARBON_DIOXIDE);
+  co2_mq135 = MQGetGasPercentage(MQRead() / Ro, GAS_CARBON_DIOXIDE);
   co = MQGetGasPercentage(MQRead() / Ro, GAS_CARBON_MONOXIDE);
   alcohol = MQGetGasPercentage(MQRead() / Ro, GAS_ALCOHOL);
   ammonium = MQGetGasPercentage(MQRead() / Ro, GAS_AMMONIUM);
@@ -23,19 +23,19 @@ float *readMQ135()
   acetone = MQGetGasPercentage(MQRead() / Ro, GAS_ACETONE);
 
   lastReadTime = esp_timer_get_time() / 1000;
-  float values[6] = {co2, co, alcohol, ammonium, toulene, acetone};
+  float values[6] = {co2_mq135, co, alcohol, ammonium, toulene, acetone};
   return values;
 }
 
 float readCO2()
 {
-  if (esp_timer_get_time() / 1000 < (lastReadTime + 10000) && co2 != 0)
+  if (esp_timer_get_time() / 1000 < (lastReadTime + 10000) && co2_mq135 != 0)
   {
-    return co2;
+    return co2_mq135;
   }
   else
   {
-    return co2 = MQGetGasPercentage(MQRead() / 10, GAS_CARBON_DIOXIDE);
+    return co2_mq135 = MQGetGasPercentage(MQRead() / 10, GAS_CARBON_DIOXIDE);
   }
 }
 float readCO()
@@ -68,7 +68,7 @@ float readAMMONIUM()
   }
   else
   {
-    return ammonium = MQGetGasPercentage(MQRead() / 10, readAMMONIUM);
+    return ammonium = MQGetGasPercentage(MQRead() / 10, GAS_AMMONIUM);
   }
 }
 float readTOULENE()
