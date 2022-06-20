@@ -3,6 +3,9 @@ int16 counter
 int16 co2
 int16 temperature
 int16 r0value
-int16 lpg
-int16 co
-int16 smoke
+float32 co2_mq135
+float32 co
+float32 alcohol
+float32 ammonium
+float32 toulene
+float32 acetone
