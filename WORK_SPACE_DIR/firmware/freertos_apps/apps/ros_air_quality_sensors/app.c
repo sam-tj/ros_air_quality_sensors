@@ -2,6 +2,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 #include <rcl/rcl.h>
 #include <rcl/error_handling.h>
@@ -24,9 +25,12 @@
 #endif
 
 #include "components/mhz19b/mhz19b.c" //wrong impementation
-#include "components/MQ-135-library/MQ135.c"
+//#include "components/MQ-135-library/MQ135.c"
+#include "components/MQSensorsLib/src/MQUnifiedsensor.c"
 
 #define ADC1_CHANNEL_4 ADC1_CHANNEL_4 //ADC1 channel 4 is GPIO32 (ESP32)
+#define Voltage_Resolution 3.09
+#define RatioMQ135CleanAir 3.6
 
 #define RCCHECK(fn)                                                                      \
 	{                                                                                    \
@@ -46,7 +50,8 @@
 		}                                                                                  \
 	}
 
-static const adc_bits_width_t width = ADC_WIDTH_BIT_10;
+static const adc_bits_width_t width = ADC_WIDTH_BIT_12; //do change down as well
+#define ADC_Bit_Resolution 12
 
 // pin definition
 gpio_num_t adc_gpio_num1;
@@ -96,7 +101,7 @@ void timer_callback(rcl_timer_t *timer, int64_t last_call_time)
 		msg.r0value = R0val;
 		if (R0val < Ro_inf)
 		{
-			msg.co2_mq135 = readCO2();
+			msg.co2_mq135 = readCO2()+400;
 			msg.co = readCO();
 			msg.alcohol = readALCOHOL();
 			msg.ammonium = readAMMONIUM();
@@ -247,8 +252,28 @@ void initialize_adc(void)
 	printf("ADC1 init...\n");
 	adc1_config_channel_atten(ADC1_CHANNEL_4, ADC_ATTEN_11db);
 	adc1_config_width(width);
-	MQ135init(ADC1_CHANNEL_4, 22.2);
-	R0val = begin();
+	MQUnifiedsensor(Voltage_Resolution, ADC_Bit_Resolution, ADC1_CHANNEL_4);
+	setRegressionMethod(1);
+	setRL(20);
+	float calcR0 = 0;
+	for (int i = 1; i <= 10; i++)
+	{
+		update(); // Update data, the arduino will read the voltage from the analog pin
+		calcR0 += calibrate(RatioMQ135CleanAir);
+	}
+	setR0(calcR0 / 10);
+	if (isinf(calcR0) || calcR0 == 0)
+	{
+		R0val = Ro_inf;
+	}
+	else
+	{
+		R0val = calcR0;
+	}
+
+
+	//MQ135init(ADC1_CHANNEL_4, 22.2);
+	//R0val = begin();
 }
 
 static void initialize_sntp(void)
