@@ -26,7 +26,7 @@ pending
 |  ------------ |  ------------ |  ------------ |
 |  G12  |  RX  |  -  |
 |  G13  |  TX  |  -  |
-|  G13  |  -  |  G32  |
+|  G32  |  -  |  AO  |
 |  5V  |  VCC  |  VCC  |
 |  GND  |  GND  |  GND  |
 
@@ -40,10 +40,12 @@ pending
 |  co2  |  int16  |
 |  temperature  |  int16  |
 |  r0value  |  int16  |
-|  lpg  |  int16  |
-|  co  |  int16  |
-|  smoke  |  int16  |
-
+|  co2_mq135  |  float32  |
+|  co  |  float32  |
+|  alcohol  |  float32  |
+|  ammonium  |  float32  |
+|  toulene  |  float32  |
+|  acetone  |  float32  |
 
 ------------
 
