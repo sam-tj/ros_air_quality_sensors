@@ -5,7 +5,7 @@ The code can be modified according to application.
 
 ------------
 
-[![Sample topic echo](https://raw.githubusercontent.com/sam-tj/ros_air_quality_sensors/master/sample_topic_echo.png)](#)
+[![Sample topic echo](https://raw.githubusercontent.com/sam-tj/ros_air_quality_sensors/main/sample_topic_echo.png)](#)
 
 ------------
 
