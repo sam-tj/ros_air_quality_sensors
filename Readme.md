@@ -12,7 +12,7 @@ The code can be modified according to application.
 ### List of components used:
 - [ESP 32](https://www.az-delivery.de/en/products/esp32-developmentboard "ESP 32")
 - [mh-z19b CO2 Sensor](https://www.winsen-sensor.com/d/files/infrared-gas-sensor/mh-z19b-co2-ver1_0.pdf "mh-z19b CO2 Sensor") 
-- [MQ-2 gas sensor](https://www.az-delivery.de/en/products/gas-sensor-modul "MQ-2 gas sensor") 
+- [MQ-135 gas sensor](https://www.az-delivery.de/en/products/mq-135-gas-sensor-modul "MQ-135 gas sensor") 
 
 ------------
 
