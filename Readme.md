@@ -110,6 +110,8 @@ Now there should be an ip address of local network. Should be in series of 192.1
    - source install/setup.bash
    - ros2 topic echo /sensors
 
+The sensors will give values after 10 mins due to calibration hold time.
+
 ------------
 
 Available time attributes in time struct.
@@ -137,4 +139,3 @@ Tutorial
 Sensor research
 - https://seeeddoc.github.io/How_to_choose_A_Gas_Sensor/
 - https://learn.adafruit.com/gas-sensor-comparison/connect-the-sensor-boards
-- 
