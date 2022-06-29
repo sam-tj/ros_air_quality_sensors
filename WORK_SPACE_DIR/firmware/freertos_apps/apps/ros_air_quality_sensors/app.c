@@ -22,6 +22,7 @@
 #include "driver/gpio.h"
 #include "driver/adc.h"
 #include "esp_system.h"
+#include "driver/timer.h"
 #endif
 
 #include "components/mhz19b/mhz19b.c" //wrong impementation
@@ -52,26 +53,32 @@
 static const adc_bits_width_t width = ADC_WIDTH_BIT_12; //do change down as well
 #define ADC_Bit_Resolution 12
 
+#define TIMER_DIVIDER         (80)  //  Hardware timer clock divider
+#define TIMER_SCALE           (TIMER_BASE_CLK / TIMER_DIVIDER)  // convert counter value to seconds
+
 // pin definition
 gpio_num_t adc_gpio_num1;
 
+// debug init
 esp_err_t r1;
+
 rcl_publisher_t publisher;
 custom_message__msg__Sensdata msg;
 
 time_t now;
 struct tm timeinfo;
 
+// Variable init
 float R0val = 0;
-
 int16_t co2;
 int16_t temp;
 mhz19b_dev_t dev;
 char version[6];
 uint16_t range;
+bool autocalib = false;
 bool autocal;
-
 int16_t counter = 0;
+int calibInitTime = 10*60 * 1000;
 
 static void message_init(void);
 static void initialize_mhz19b(void);
@@ -80,12 +87,16 @@ static void mhz19b_reading(void);
 void initialize_adc(void);
 static void initialize_sntp(void);
 static void obtain_time(void);
+static void calibrate_sensors(void);
 
 void timer_callback(rcl_timer_t *timer, int64_t last_call_time)
 {
 	obtain_time();
-	mhz19b_reading();
-	updateMQ();
+	if (autocalib == true)
+	{
+		mhz19b_reading();
+		updateMQ();
+	}
 	RCLC_UNUSED(last_call_time);
 	if (timer != NULL)
 	{
@@ -101,7 +112,7 @@ void timer_callback(rcl_timer_t *timer, int64_t last_call_time)
 		msg.r0value = R0val;
 		if (R0val < Ro_inf)
 		{
-			msg.co2_mq135 = readCO2()+400;
+			msg.co2_mq135 = readCO2() + 400;
 			msg.co = readCO();
 			msg.alcohol = readALCOHOL();
 			msg.ammonium = readAMMONIUM();
@@ -159,10 +170,14 @@ void appMain(void *arg)
 	RCCHECK(rclc_executor_init(&executor, &support.context, 1, &allocator));
 	RCCHECK(rclc_executor_add_timer(&executor, &timer));
 
+	uint64_t lastTime = esp_timer_get_time()/TIMER_SCALE;	
 	message_init();
-
 	while (1)
 	{
+		if ((lastTime - esp_timer_get_time()/TIMER_SCALE) > calibInitTime)
+		{
+			calibrate_sensors();
+		}
 		rclc_executor_spin_some(&executor, RCL_MS_TO_NS(100));
 		usleep(100000);
 	}
@@ -216,8 +231,8 @@ static void initialize_mhz19b(void)
 		mhz19b_get_range(&dev, &range);
 		printf("range: %d", range);
 
-		mhz19b_get_auto_calibration(&dev, &autocal);
-		printf("autocal: %s", autocal ? "ON" : "OFF");
+		// mhz19b_get_auto_calibration(&dev, &autocal);
+		// printf("autocal: %s", autocal ? "ON" : "OFF");
 	}
 }
 
@@ -255,21 +270,6 @@ void initialize_adc(void)
 	MQsensor(Voltage_Resolution, ADC_Bit_Resolution, ADC1_CHANNEL_4);
 	setRegressionMethod(1);
 	setRL(20);
-	float calcR0 = 0;
-	for (int i = 1; i <= 10; i++)
-	{
-		updateMQ(); // Update data, the arduino will read the voltage from the analog pin
-		calcR0 += calibrate(RatioMQ135CleanAir);
-	}
-	setR0(calcR0 / 10);
-	if (isinf(calcR0) || calcR0 == 0)
-	{
-		R0val = Ro_inf;
-	}
-	else
-	{
-		R0val = calcR0;
-	}
 }
 
 static void initialize_sntp(void)
@@ -296,4 +296,33 @@ static void obtain_time(void)
 {
 	time(&now);
 	localtime_r(&now, &timeinfo);
+}
+
+static void calibrate_sensors(void)
+{
+	if (autocalib == false)
+	{
+		printf("sensor calib init\n");		
+		float calcR0 = 0;
+		for (int i = 1; i <= 10; i++)
+		{
+			updateMQ(); // Update data, the arduino will read the voltage from the analog pin
+			calcR0 += calibrate(RatioMQ135CleanAir);
+		}
+		setR0(calcR0 / 10);
+		if (isinf(calcR0) || calcR0 == 0)
+		{
+			R0val = Ro_inf;
+		}
+		else
+		{
+			R0val = calcR0;
+		}
+		if (mhz19b_is_ready(&dev))
+		{
+			mhz19b_start_calibration(&dev);
+		}
+		printf("sensor calib pass");
+		autocalib = true;
+	}
 }
