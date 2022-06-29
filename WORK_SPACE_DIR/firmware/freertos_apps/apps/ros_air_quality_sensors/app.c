@@ -6,10 +6,8 @@
 
 #include <rcl/rcl.h>
 #include <rcl/error_handling.h>
-
 #include <rclc/rclc.h>
 #include <rclc/executor.h>
-
 #include <time.h>
 #include <sys/time.h>
 #include "esp_sntp.h"
@@ -25,12 +23,17 @@
 #include "driver/timer.h"
 #endif
 
-#include "components/mhz19b/mhz19b.c" //wrong impementation
+//sensor library
+#include "components/mhz19b/mhz19b.c"
 #include "components/MQSensorsLib/src/MQsensor.c"
 
+//VOC parameters
 #define ADC1_CHANNEL_4 ADC1_CHANNEL_4 //ADC1 channel 4 is GPIO32 (ESP32)
 #define Voltage_Resolution 3.09
 #define RatioMQ135CleanAir 3.6
+static const adc_bits_width_t width = ADC_WIDTH_BIT_12; //do change down as well
+#define ADC_Bit_Resolution 12
+gpio_num_t adc_gpio_num1;
 
 #define RCCHECK(fn)                                                                      \
 	{                                                                                    \
@@ -50,16 +53,7 @@
 		}                                                                                  \
 	}
 
-static const adc_bits_width_t width = ADC_WIDTH_BIT_12; //do change down as well
-#define ADC_Bit_Resolution 12
-
-#define TIMER_DIVIDER         (80)  //  Hardware timer clock divider
-#define TIMER_SCALE           (TIMER_BASE_CLK / TIMER_DIVIDER)  // convert counter value to seconds
-
-// pin definition
-gpio_num_t adc_gpio_num1;
-
-// debug init
+// debug initialization
 esp_err_t r1;
 
 rcl_publisher_t publisher;
@@ -76,10 +70,10 @@ mhz19b_dev_t dev;
 char version[6];
 uint16_t range;
 bool autocalib = false;
-bool autocal;
 int16_t counter = 0;
-int calibInitTime = 10*60 * 1000;
+uint64_t calibInitTime = 10 * 60 * 1000 * 1000; //(in microseconds) ~ mins *60 seconds *1000 milliseconds *1000 microseconds
 
+//function definition
 static void message_init(void);
 static void initialize_mhz19b(void);
 static void mhz19b_warmup(void);
@@ -88,45 +82,7 @@ void initialize_adc(void);
 static void initialize_sntp(void);
 static void obtain_time(void);
 static void calibrate_sensors(void);
-
-void timer_callback(rcl_timer_t *timer, int64_t last_call_time)
-{
-	obtain_time();
-	if (autocalib == true)
-	{
-		mhz19b_reading();
-		updateMQ();
-	}
-	RCLC_UNUSED(last_call_time);
-	if (timer != NULL)
-	{
-		const unsigned int PUB_MSG_CAPACITY = 31;
-		msg.counter = counter++;
-
-		msg.time.data = malloc(PUB_MSG_CAPACITY);
-		snprintf(msg.time.data, PUB_MSG_CAPACITY, "Time now hh: %d mm: %d ss: %d", timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
-		msg.time.capacity = PUB_MSG_CAPACITY;
-
-		msg.co2 = co2;
-		msg.temperature = temp;
-		msg.r0value = R0val;
-		if (R0val < Ro_inf)
-		{
-			msg.co2_mq135 = readCO2() + 400;
-			msg.co = readCO();
-			msg.alcohol = readALCOHOL();
-			msg.ammonium = readAMMONIUM();
-			msg.toulene = readTOULENE();
-			msg.acetone = readACETONE();
-		}
-
-		//print values in serial monitor
-		printf("\nanalog read = %d", adc1_get_raw(ADC1_CHANNEL_4));
-
-		RCSOFTCHECK(rcl_publish(&publisher, &msg, NULL));
-		free(msg.time.data);
-	}
-}
+void timer_callback(rcl_timer_t *timer, int64_t last_call_time);
 
 void appMain(void *arg)
 {
@@ -170,11 +126,11 @@ void appMain(void *arg)
 	RCCHECK(rclc_executor_init(&executor, &support.context, 1, &allocator));
 	RCCHECK(rclc_executor_add_timer(&executor, &timer));
 
-	uint64_t lastTime = esp_timer_get_time()/TIMER_SCALE;	
+	uint64_t lastTime = esp_timer_get_time();
 	message_init();
 	while (1)
 	{
-		if ((lastTime - esp_timer_get_time()/TIMER_SCALE) > calibInitTime)
+		if ((esp_timer_get_time() - lastTime) > calibInitTime)
 		{
 			calibrate_sensors();
 		}
@@ -189,6 +145,7 @@ void appMain(void *arg)
 	vTaskDelete(NULL);
 }
 
+//initializing variables
 static void message_init(void)
 {
 	msg.time.data = "";
@@ -204,6 +161,7 @@ static void message_init(void)
 	msg.acetone = 0;
 }
 
+//initializing mhz19b sensor
 static void initialize_mhz19b(void)
 {
 	// sesnsor init
@@ -230,12 +188,10 @@ static void initialize_mhz19b(void)
 
 		mhz19b_get_range(&dev, &range);
 		printf("range: %d", range);
-
-		// mhz19b_get_auto_calibration(&dev, &autocal);
-		// printf("autocal: %s", autocal ? "ON" : "OFF");
 	}
 }
 
+//warming function for mhz19b sensor
 static void mhz19b_warmup(void)
 {
 	if (mhz19b_is_ready(&dev))
@@ -250,6 +206,7 @@ static void mhz19b_warmup(void)
 	}
 }
 
+//value reading function for mhz19b sensor
 static void mhz19b_reading(void)
 {
 	if (mhz19b_is_ready(&dev))
@@ -258,7 +215,7 @@ static void mhz19b_reading(void)
 	}
 }
 
-//ADC initialization
+//ADC for MQ sensor initialization
 void initialize_adc(void)
 {
 	r1 = adc1_pad_get_io_num(ADC1_CHANNEL_4, &adc_gpio_num1);
@@ -272,10 +229,11 @@ void initialize_adc(void)
 	setRL(20);
 }
 
+//Initialization for Time server using sntp
 static void initialize_sntp(void)
 {
 	sntp_setoperatingmode(SNTP_OPMODE_POLL);
-	sntp_setservername(0, "192.168.0.11"); // update ip with respect to the ntp server
+	sntp_setservername(0, "192.168.33.7"); // update ip with respect to the ntp server
 	sntp_init();
 	int retry = 0;
 	const int retry_count = 5;
@@ -292,17 +250,19 @@ static void initialize_sntp(void)
 	//strftime(strftime_buf, sizeof(strftime_buf), "%c", &timeinfo);
 }
 
+//time reading function from ntp server
 static void obtain_time(void)
 {
 	time(&now);
 	localtime_r(&now, &timeinfo);
 }
 
+//MQ and MHZ19b sensor calibration funtion
 static void calibrate_sensors(void)
 {
 	if (autocalib == false)
 	{
-		printf("sensor calib init\n");		
+		printf("\nsensor calib init");
 		float calcR0 = 0;
 		for (int i = 1; i <= 10; i++)
 		{
@@ -322,7 +282,47 @@ static void calibrate_sensors(void)
 		{
 			mhz19b_start_calibration(&dev);
 		}
-		printf("sensor calib pass");
+		printf("\nsensor calib pass");
 		autocalib = true;
+	}
+}
+
+//Timer function to publish vales on ros topic
+void timer_callback(rcl_timer_t *timer, int64_t last_call_time)
+{
+	obtain_time();
+	if (autocalib == true)
+	{
+		mhz19b_reading();
+		updateMQ();
+	}
+	RCLC_UNUSED(last_call_time);
+	if (timer != NULL)
+	{
+		const unsigned int PUB_MSG_CAPACITY = 31;
+		msg.counter = counter++;
+
+		msg.time.data = malloc(PUB_MSG_CAPACITY);
+		snprintf(msg.time.data, PUB_MSG_CAPACITY, "Time now hh: %d mm: %d ss: %d", timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
+		msg.time.capacity = PUB_MSG_CAPACITY;
+
+		msg.co2 = co2;
+		msg.temperature = temp;
+		msg.r0value = R0val;
+		if (R0val < Ro_inf)
+		{
+			msg.co2_mq135 = readCO2() + 400;
+			msg.co = readCO();
+			msg.alcohol = readALCOHOL();
+			msg.ammonium = readAMMONIUM();
+			msg.toulene = readTOULENE();
+			msg.acetone = readACETONE();
+		}
+
+		//print values in serial monitor
+		printf("\nanalog read = %d", adc1_get_raw(ADC1_CHANNEL_4));
+
+		RCSOFTCHECK(rcl_publish(&publisher, &msg, NULL));
+		free(msg.time.data);
 	}
 }
