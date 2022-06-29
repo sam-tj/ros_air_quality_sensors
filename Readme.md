@@ -124,6 +124,17 @@ Available time attributes in time struct.
 - int tm_isdst      ->      DST.		[-1/0/1]
 
 ### References
+Library
 - http://sandboxelectronics.com/?p=165
+- https://github.com/miguel5612/MQSensorsLib
+- https://github.com/UncleRus/esp-idf-lib
+
+Tutorial
 - https://vitux.com/how-to-install-ntp-server-and-client-on-ubuntu/
 - https://www.theconstructsim.com/ros2-tutorials-7-how-to-create-a-ros2-custom-message-new/
+- https://programozdazotthonod.hu/2020/05/03/a-proper-guide-to-the-mq9-sensor/
+  
+Sensor research
+- https://seeeddoc.github.io/How_to_choose_A_Gas_Sensor/
+- https://learn.adafruit.com/gas-sensor-comparison/connect-the-sensor-boards
+- 
